@@ -40,7 +40,7 @@ def load_vgg(sess, vgg_path):
     L3 = graph.get_tensor_by_name(vgg_layer3_out_tensor_name)
     L4 = graph.get_tensor_by_name(vgg_layer4_out_tensor_name)
     L7 = graph.get_tensor_by_name(vgg_layer7_out_tensor_name)
-    
+
     return W1, keep, L3, L4, L7
 tests.test_load_vgg(load_vgg, tf)
 
@@ -65,7 +65,7 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     conv_1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     output = tf.add(output, conv_1x1)
     output = tf.layers.conv2d_transpose(output, num_classes, 16, 8, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    
+
     return output
 tests.test_layers(layers)
 
@@ -110,7 +110,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
         for image, label in get_batches_fn(batch_size):
             _, loss = sess.run([train_op, cross_entropy_loss],
                     feed_dict={input_image: image, correct_label: label, keep_prob: 0.5, learning_rate: 0.0005})
-            print("loss: = {:.3f}".format(loss))
+            print("loss: = {:.4f}".format(loss))
 tests.test_train_nn(train_nn)
 
 
@@ -145,8 +145,8 @@ def run():
         logits, train_op, cross_entropy_loss = optimize(nn_last_layer, correct_label, learning_rate, num_classes)
 
         # TODO: Train NN using the train_nn function
-        epochs = 32
-        batch_size = 8
+        epochs = 28
+        batch_size = 4
         train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image, correct_label, keep_prob, learning_rate)
 
         # TODO: Save inference data using helper.save_inference_samples
