@@ -90,7 +90,11 @@ def gen_batch_function(data_folder, image_shape):
                 #image = scipy.misc.imresize(scipy.misc.imread(image_file), image_shape)
                 #gt_image = scipy.misc.imresize(scipy.misc.imread(gt_image_file), image_shape)
                 image = skimage.transform.resize(imageio.imread(image_file), image_shape, mode='reflect')
+                image = image * 255
+                image = np.uint8(np.asarray(image))
                 gt_image = skimage.transform.resize(imageio.imread(gt_image_file), image_shape, mode='reflect')
+                gt_image = gt_image * 255
+                gt_image = np.uint8(np.asarray(gt_image))
 
                 gt_bg = np.all(gt_image == background_color, axis=2)
                 gt_bg = gt_bg.reshape(*gt_bg.shape, 1)
@@ -115,8 +119,9 @@ def gen_test_output(sess, logits, keep_prob, image_pl, data_folder, image_shape)
     :return: Output for for each test image
     """
     for image_file in glob(os.path.join(data_folder, 'image_2', '*.png')):
-        #image = scipy.misc.imresize(scipy.misc.imread(image_file), image_shape)
         image = skimage.transform.resize(imageio.imread(image_file), image_shape, mode='reflect')
+        image = image * 255
+        image = np.uint8(np.asarray(image))
 
         im_softmax = sess.run(
             [tf.nn.softmax(logits)],
@@ -124,16 +129,14 @@ def gen_test_output(sess, logits, keep_prob, image_pl, data_folder, image_shape)
         im_softmax = im_softmax[0][:, 1].reshape(image_shape[0], image_shape[1])
         segmentation = (im_softmax > 0.5).reshape(image_shape[0], image_shape[1], 1)
         mask = np.dot(segmentation, np.array([[0, 255, 0, 127]]))
-        #mask = scipy.misc.toimage(mask, mode="RGBA")
+        mask = np.uint8(np.asarray(mask))
         mask = PIL.Image.fromarray(mask, mode="RGBA")
-        #street_im = scipy.misc.toimage(image)
-        #street_im = PIL.Image.fromarray(image)
-        street_im = PIL.Image.fromarray(np.uint8(np.asarray(image)*256))
-        #street_im = PIL.Image.fromarray(np.asarray(image))
+        #street_im = PIL.Image.fromarray(np.uint8(np.asarray(image)))
+        street_im = PIL.Image.fromarray(image)
         street_im.paste(mask, box=None, mask=mask)
 
         yield os.path.basename(image_file), np.array(street_im)
-        #yield os.path.basename(image_file), np.uint8(np.asarray(image)*256)
+        #yield os.path.basename(image_file), np.array(mask)
 
 
 def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image):
